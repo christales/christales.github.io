@@ -516,7 +516,20 @@ a:hover {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.15rem;
-  margin-top: 2.75rem;
+  margin-top: 1.5rem;
+}
+
+.inline-map-link {
+  color: var(--ink-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 0.22em;
+  transition: opacity var(--transition-fast), text-decoration-color var(--transition-fast);
+}
+
+.inline-map-link:hover {
+  opacity: 0.78;
+  text-decoration-color: var(--ink-primary);
 }
 
 .info-card {

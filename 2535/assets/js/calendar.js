@@ -46,6 +46,10 @@
       .replace(/'/g, '&#39;');
   }
 
+  function buildGoogleMapsUrl(location) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.trim())}`;
+  }
+
   function splitLabelAndNote(ev) {
     if (ev.label) {
       const match = ev.label.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
@@ -72,18 +76,23 @@
     return { dateText, note: start ? DAYS_PL[start.getDay()] : '' };
   }
 
-  function formatMeta(ev) {
+  function formatMetaHtml(ev) {
     const start = parseDateSafe(ev.start);
     const parts = [];
     if (start) {
-      parts.push(DAYS_PL[start.getDay()]);
+      parts.push(escapeHtml(DAYS_PL[start.getDay()]));
       if (!ev.allDay && ev.hasTime) {
         const hh = String(start.getHours()).padStart(2, '0');
         const mm = String(start.getMinutes()).padStart(2, '0');
-        parts.push(`godz. ${hh}:${mm}`);
+        parts.push(escapeHtml(`godz. ${hh}:${mm}`));
       }
     }
-    if (ev.location) parts.push(ev.location);
+    if (ev.location && ev.location.trim()) {
+      const loc = ev.location.trim();
+      parts.push(
+        `<a class="inline-map-link" href="${buildGoogleMapsUrl(loc)}" target="_blank" rel="noopener noreferrer" title="Otwórz lokalizację w Google Maps">${escapeHtml(loc)}&nbsp;↗</a>`
+      );
+    }
     return parts.join(' · ');
   }
 
@@ -150,14 +159,14 @@
 
     if (nextEv) {
       const { dateText } = splitLabelAndNote(nextEv);
-      const meta = formatMeta(nextEv);
+      const metaHtml = formatMetaHtml(nextEv);
       const subUrl = window.PROJEKT_CONFIG?.calendar?.googleSubscribeUrl || '#';
       const titleText = escapeHtml(nextEv.title || 'Spotkanie Projekt 25-35');
 
       cardEl.innerHTML = `
         <span class="next-meeting-badge">Najbliższe spotkanie</span>
         <h3 class="next-meeting-date">${escapeHtml(dateText)}</h3>
-        <p class="next-meeting-meta">${titleText}${meta ? ' · ' + escapeHtml(meta) : ''}</p>
+        <p class="next-meeting-meta">${titleText}${metaHtml ? ' · ' + metaHtml : ''}</p>
         <div class="next-meeting-actions">
           <button type="button" class="btn btn--primary btn--sm" id="btn-download-ics">Dodaj do kalendarza (.ics)</button>
           <a class="btn btn--sm" href="${subUrl}" target="_blank" rel="noopener noreferrer">Subskrybuj kalendarz Google ↗</a>
