@@ -9,6 +9,7 @@
   ];
 
   const DAYS_PL = ['niedziela', 'poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota'];
+  let registrationCutoffTimer = null;
 
   function parseDateSafe(str) {
     if (!str) return null;
@@ -27,6 +28,19 @@
       a.getMonth() === b.getMonth() &&
       a.getDate() === b.getDate()
     );
+  }
+
+  function formatYmdLocal(d) {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function isRegistrationOpen(ev, regCfg, now) {
+    if (!ev || !ev._startDate || !regCfg || !regCfg.url) return false;
+    if (regCfg.forEventDate && formatYmdLocal(ev._startDate) !== regCfg.forEventDate) {
+      return false;
+    }
+    return now.getTime() < ev._startDate.getTime();
   }
 
   function getEffectiveEndDate(ev) {
@@ -175,13 +189,19 @@
   }
 
   function renderMeetings(events, isLive) {
+    if (registrationCutoffTimer) {
+      clearTimeout(registrationCutoffTimer);
+      registrationCutoffTimer = null;
+    }
+
     const cardEl = document.getElementById('next-meeting-card');
     const ribbonEl = document.getElementById('dates-ribbon');
     const noteEl = document.getElementById('calendar-source-note');
+    const actionsEl = document.getElementById('calendar-actions');
     if (!cardEl || !ribbonEl) return;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const normalized = events
       .map((ev) => ({ ...ev, _startDate: parseDateSafe(ev.start), _endDate: getEffectiveEndDate(ev) }))
@@ -190,31 +210,55 @@
 
     const upcoming = normalized.filter((ev) => ev._endDate >= today);
     const nextEv = upcoming[0] || null;
+    const subUrl = window.PROJEKT_CONFIG?.calendar?.googleSubscribeUrl || '#';
+    const regCfg = window.PROJEKT_CONFIG?.calendar?.registration;
 
     if (nextEv) {
       const { dateText } = splitLabelAndNote(nextEv);
       const metaHtml = formatMetaHtml(nextEv);
-      const subUrl = window.PROJEKT_CONFIG?.calendar?.googleSubscribeUrl || '#';
       const titleText = escapeHtml(nextEv.title || 'Spotkanie Projekt 25-35');
+      const regOpen = isRegistrationOpen(nextEv, regCfg, now);
+
+      let ctaHtml;
+      if (regOpen) {
+        ctaHtml = `<a class="btn btn--primary" href="${escapeHtml(regCfg.url)}" target="_blank" rel="noopener noreferrer">Zapisz się na spotkanie ↗</a>`;
+        const msUntilStart = nextEv._startDate.getTime() - now.getTime();
+        if (msUntilStart > 0 && msUntilStart <= 2147483647) {
+          registrationCutoffTimer = setTimeout(() => renderMeetings(events, isLive), msUntilStart + 500);
+        }
+      } else {
+        ctaHtml = `<p class="next-meeting-cta-note">Wpadnij na&nbsp;naszą <a href="#dolacz">grupę WhatsApp lub&nbsp;Instagrama</a> — tam najszybciej złapiesz informacje o&nbsp;zapisach na&nbsp;kolejne spotkanie.</p>`;
+      }
 
       cardEl.innerHTML = `
         <span class="next-meeting-badge">Najbliższe spotkanie</span>
         <h3 class="next-meeting-date">${escapeHtml(dateText)}</h3>
         <p class="next-meeting-meta">${titleText}${metaHtml ? ' · ' + metaHtml : ''}</p>
-        <div class="next-meeting-actions">
-          <button type="button" class="btn btn--primary btn--sm" id="btn-download-ics">Dodaj do kalendarza (.ics)</button>
-          <a class="btn btn--sm" href="${subUrl}" target="_blank" rel="noopener noreferrer">Subskrybuj kalendarz Google ↗</a>
+        <div class="next-meeting-cta">
+          ${ctaHtml}
         </div>
       `;
 
-      const dlBtn = document.getElementById('btn-download-ics');
-      if (dlBtn) dlBtn.addEventListener('click', () => downloadSingleIcs(nextEv));
+      if (actionsEl) {
+        actionsEl.innerHTML = `
+          <button type="button" class="btn btn--sm" id="btn-download-ics">Dodaj do kalendarza (.ics)</button>
+          <a class="btn btn--sm" href="${escapeHtml(subUrl)}" target="_blank" rel="noopener noreferrer">Subskrybuj kalendarz Google ↗</a>
+        `;
+        const dlBtn = document.getElementById('btn-download-ics');
+        if (dlBtn) dlBtn.addEventListener('click', () => downloadSingleIcs(nextEv));
+      }
     } else {
       cardEl.innerHTML = `
         <span class="next-meeting-badge">Kalendarz spotkań</span>
         <h3 class="next-meeting-date">Nowe terminy wkrótce</h3>
         <p class="next-meeting-meta">Śledź sekcję <a href="#aktualnosci">aktualności</a> poniżej lub dołącz do <a href="#dolacz">grupy WhatsApp</a>, aby nie przegapić kolejnego spotkania.</p>
       `;
+
+      if (actionsEl) {
+        actionsEl.innerHTML = `
+          <a class="btn btn--sm" href="${escapeHtml(subUrl)}" target="_blank" rel="noopener noreferrer">Subskrybuj kalendarz Google ↗</a>
+        `;
+      }
     }
 
     // Siatka terminów sezonu

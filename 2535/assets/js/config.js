@@ -41,6 +41,14 @@ window.PROJEKT_CONFIG = {
     googleSubscribeUrl:
       'https://calendar.google.com/calendar/u/0/r?cid=d8f3663e0f66308ba6dae0a6cb03e4ca9c4b702f1dc41cb394d33c00bf9b2c4b@group.calendar.google.com',
 
+    // Zapisy na najbliższe spotkanie (tymczasowy formularz Google Forms; docelowo własny formularz)
+    // forEventDate (YYYY-MM-DD) wiąże formularz z konkretnym terminem, aby po rozpoczęciu spotkania
+    // przycisk nie wyświetlał się dla kolejnego miesiąca ze starym linkiem (ustaw null dla formularza uniwersalnego).
+    registration: {
+      url: 'https://forms.gle/JwHV1rqet3ffC4LJ6',
+      forEventDate: '2026-12-05',
+    },
+
     // Statyczny fallback — sezon 2026/2027 ze statementu (wszystkie regularne spotkania to soboty, rekolekcje pt-nd)
     fallbackEvents: [
       { start: '2026-09-05', label: '5 września', title: 'Spotkanie Projekt 25-35' },
