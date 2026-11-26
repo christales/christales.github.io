@@ -21,18 +21,50 @@
     return Number.isNaN(dt.getTime()) ? null : dt;
   }
 
+  function isSameCalendarDay(a, b) {
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
+  }
+
+  function getEffectiveEndDate(ev) {
+    const start = parseDateSafe(ev.start);
+    if (!start) return null;
+    const end = ev.end ? parseDateSafe(ev.end) : null;
+    if (!end || end <= start) return start;
+
+    if (ev.allDay) {
+      // Google Calendar all-day DTEND jest ekskluzywna (+1 dzień)
+      const adj = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1, 23, 59, 59);
+      return adj < start ? start : adj;
+    }
+
+    // Wydarzenie z godziną kończące się dokładnie o 00:00 kolejnego dnia należy jeszcze do poprzedniego dnia
+    if (
+      !isSameCalendarDay(start, end) &&
+      end.getHours() === 0 &&
+      end.getMinutes() === 0 &&
+      end.getSeconds() === 0
+    ) {
+      const adj = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1, 23, 59, 59);
+      return adj < start ? start : adj;
+    }
+
+    return end;
+  }
+
   function formatPolishDate(ev) {
     if (ev.label) return ev.label;
     const start = parseDateSafe(ev.start);
     if (!start) return '';
-    const end = ev.end ? parseDateSafe(ev.end) : null;
-    if (end && end.toDateString() !== start.toDateString() && ev.allDay) {
-      // Google Calendar all-day end date jest ekskluzywna (+1 dzień)
-      const adjEnd = new Date(end.getTime() - 86400000);
-      if (adjEnd.getMonth() === start.getMonth()) {
-        return `${start.getDate()}–${adjEnd.getDate()} ${MONTHS_GENITIVE[start.getMonth()]}`;
+    const effEnd = getEffectiveEndDate(ev);
+    if (effEnd && !isSameCalendarDay(start, effEnd)) {
+      if (effEnd.getMonth() === start.getMonth()) {
+        return `${start.getDate()}–${effEnd.getDate()} ${MONTHS_GENITIVE[start.getMonth()]}`;
       }
-      return `${start.getDate()} ${MONTHS_GENITIVE[start.getMonth()]} – ${adjEnd.getDate()} ${MONTHS_GENITIVE[adjEnd.getMonth()]}`;
+      return `${start.getDate()} ${MONTHS_GENITIVE[start.getMonth()]} – ${effEnd.getDate()} ${MONTHS_GENITIVE[effEnd.getMonth()]}`;
     }
     return `${start.getDate()} ${MONTHS_GENITIVE[start.getMonth()]}`;
   }
@@ -66,12 +98,9 @@
     }
 
     const start = parseDateSafe(ev.start);
-    const end = ev.end ? parseDateSafe(ev.end) : null;
-    if (start && end && end.toDateString() !== start.toDateString() && ev.allDay) {
-      const adjEnd = new Date(end.getTime() - 86400000);
-      if (adjEnd.toDateString() !== start.toDateString()) {
-        return { dateText, note: `${DAYS_PL[start.getDay()]}–${DAYS_PL[adjEnd.getDay()]}` };
-      }
+    const effEnd = getEffectiveEndDate(ev);
+    if (start && effEnd && !isSameCalendarDay(start, effEnd)) {
+      return { dateText, note: `${DAYS_PL[start.getDay()]}–${DAYS_PL[effEnd.getDay()]}` };
     }
     return { dateText, note: start ? DAYS_PL[start.getDay()] : '' };
   }
@@ -80,7 +109,12 @@
     const start = parseDateSafe(ev.start);
     const parts = [];
     if (start) {
-      parts.push(escapeHtml(DAYS_PL[start.getDay()]));
+      const effEnd = getEffectiveEndDate(ev);
+      if (effEnd && !isSameCalendarDay(start, effEnd)) {
+        parts.push(escapeHtml(`${DAYS_PL[start.getDay()]}–${DAYS_PL[effEnd.getDay()]}`));
+      } else {
+        parts.push(escapeHtml(DAYS_PL[start.getDay()]));
+      }
       if (!ev.allDay && ev.hasTime) {
         const hh = String(start.getHours()).padStart(2, '0');
         const mm = String(start.getMinutes()).padStart(2, '0');
@@ -109,7 +143,7 @@
       dtStartLine = `DTSTART;TZID=Europe/Warsaw:${ymdHis(start)}`;
       dtEndLine = `DTEND;TZID=Europe/Warsaw:${ymdHis(end)}`;
     } else {
-      const endBase = ev.end ? parseDateSafe(ev.end) : start;
+      const endBase = getEffectiveEndDate(ev) || start;
       const endNext = new Date(endBase.getFullYear(), endBase.getMonth(), endBase.getDate() + 1);
       dtStartLine = `DTSTART;VALUE=DATE:${ymd(start)}`;
       dtEndLine = `DTEND;VALUE=DATE:${ymd(endNext)}`;
@@ -150,7 +184,7 @@
     today.setHours(0, 0, 0, 0);
 
     const normalized = events
-      .map((ev) => ({ ...ev, _startDate: parseDateSafe(ev.start), _endDate: parseDateSafe(ev.end || ev.start) }))
+      .map((ev) => ({ ...ev, _startDate: parseDateSafe(ev.start), _endDate: getEffectiveEndDate(ev) }))
       .filter((ev) => ev._startDate)
       .sort((a, b) => a._startDate - b._startDate);
 
