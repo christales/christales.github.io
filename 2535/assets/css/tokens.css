@@ -1,0 +1,55 @@
+/* ==========================================================================
+   PROJEKT 25-35 — Design Tokens (zweryfikowane pikselowo z materiałów marki)
+   ========================================================================== */
+
+/* Lokalny font Safira March — w razie konwersji do .woff2 można dodać woff2 jako pierwszy src */
+@font-face {
+  font-family: 'Safira March';
+  src: url('../fonts/SafiraMarch.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Paleta barw (exact pixel values z 1.png oraz statement.png) */
+  --bg-primary: #EDEAE4;        /* Warm Sand — główne tło */
+  --bg-elevated: #F5F3EE;       /* Jaśniejszy piasek dla subtelnych kart */
+  --bg-card: rgba(255, 255, 255, 0.42);
+  --ink-primary: #442B1C;       /* Deep Espresso — logo i główne nagłówki */
+  --ink-body: #4B2E0F;          /* Warm Espresso — tekst ciągły */
+  --ink-muted: #6E5747;         /* Muted Umber — opisy pomocnicze, metadane */
+  --border-subtle: rgba(68, 43, 28, 0.16);
+  --border-strong: rgba(68, 43, 28, 0.38);
+  --accent-white: #FFFFFF;
+
+  /* Typografia */
+  --font-display: 'Safira March', 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Lora', Georgia, 'Times New Roman', serif;
+
+  /* Skala typograficzna (mobile-first, płynna) */
+  --text-xs: 0.8125rem;         /* 13px */
+  --text-sm: 0.9375rem;         /* 15px */
+  --text-base: clamp(1rem, 0.96rem + 0.25vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1.05rem + 0.4vw, 1.35rem);
+  --text-h2: clamp(1.65rem, 1.35rem + 1.5vw, 2.5rem);
+  --text-h3: clamp(1.25rem, 1.12rem + 0.6vw, 1.6rem);
+
+  /* Odstępy i layout */
+  --container-max: 860px;
+  --container-wide: 1040px;
+  --gutter: clamp(1.25rem, 4vw, 2.5rem);
+  --section-py: clamp(4rem, 9vw, 7rem);
+
+  /* Detale */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+  --transition-fast: 180ms ease;
+  --transition-base: 320ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Z-index */
+  --z-nav: 40;
+  --z-drawer: 50;
+  --z-intro: 100;
+}
