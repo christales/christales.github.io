@@ -2,10 +2,9 @@
    PROJEKT 25-35 — Choreografia ekranu wejścia (anime.js 3.2.2)
    Sekwencja:
    1. PROJEKT zjeżdża od góry
-   2. 25 wjeżdża od lewej
+   2. 25 i 35 wjeżdżają jednocześnie z lewej i prawej
    3. myślnik zoom-in ze środka
-   4. 35 wjeżdża od prawej
-   5. pauza -> całość powiększa się w stronę użytkownika (scale up),
+   4. pauza -> całość powiększa się w stronę użytkownika (scale up),
       a 25 i 35 rozsuwają się na boki jak zapraszające wrota
    ========================================================================== */
 
@@ -32,7 +31,7 @@
     document.body.classList.remove('intro-active');
     try {
       sessionStorage.setItem(SESSION_KEY, '1');
-    } catch (_) {}
+    } catch (_) { }
   }
 
   function runIntro(forceReplay) {
@@ -46,7 +45,7 @@
     let alreadySeen = false;
     try {
       alreadySeen = sessionStorage.getItem(SESSION_KEY) === '1';
-    } catch (_) {}
+    } catch (_) { }
 
     if (prefersReduced || (!forceReplay && !forceParam && alreadySeen) || typeof window.anime !== 'function') {
       finishIntro(el.overlay);
@@ -81,7 +80,7 @@
       duration: 620,
       easing: 'easeOutExpo',
     })
-      // 2. 25 wjeżdża od lewej
+      // 2. 25 i 35 wjeżdżają jednocześnie z lewej i prawej
       .add(
         {
           targets: el.n25,
@@ -92,18 +91,6 @@
         },
         '-=240'
       )
-      // 3. Zoom-in myślnika
-      .add(
-        {
-          targets: el.dash,
-          scale: [0, 1],
-          opacity: [0, 1],
-          duration: 280,
-          easing: 'easeOutBack(2.2)',
-        },
-        '-=200'
-      )
-      // 4. 35 wjeżdża od prawej
       .add(
         {
           targets: el.n35,
@@ -112,7 +99,18 @@
           duration: 500,
           easing: 'easeOutCubic',
         },
-        '-=120'
+        '-=500'
+      )
+      // 3. Zoom-in myślnika z wejściem 25 i 35
+      .add(
+        {
+          targets: el.dash,
+          scale: [0, 1],
+          opacity: [0, 1],
+          duration: 280,
+          easing: 'easeOutBack(2.2)',
+        },
+        '-=350'
       )
       // 5A. Chwila oddechu, po czym całość powiększa się w stronę użytkownika (efekt wejścia w głąb)
       .add(
@@ -122,7 +120,7 @@
           duration: 820,
           easing: 'easeInOutQuart',
         },
-        '+=240'
+        '+=300'
       )
       // 5B. Myślnik znika, robiąc miejsce na przejście
       .add(
