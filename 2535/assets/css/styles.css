@@ -700,32 +700,85 @@ a:hover {
   gap: 0.65rem;
 }
 
-.dates-ribbon {
-  font-size: var(--text-base);
-  line-height: 1.95;
-  color: var(--ink-body);
-  margin: 0;
-}
-
-.dates-ribbon .date-item {
-  white-space: nowrap;
-}
-
-.dates-ribbon .date-item.is-past {
+.dates-schedule-label {
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--ink-muted);
-  opacity: 0.55;
-  text-decoration: line-through;
+  margin: 0 0 0.85rem;
 }
 
-.dates-ribbon .date-item.is-next {
-  font-weight: 600;
+.dates-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+
+.date-chip {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-card);
+  min-width: 0;
+}
+
+.date-chip-date {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.3;
   color: var(--ink-primary);
 }
 
-.dates-ribbon .date-sep {
-  margin-inline: 0.45rem;
+.date-chip-note {
+  font-size: 0.75rem;
+  line-height: 1.35;
   color: var(--ink-muted);
-  opacity: 0.55;
+}
+
+.date-chip.is-past {
+  background-color: transparent;
+  border-style: dashed;
+  border-color: rgba(68, 43, 28, 0.14);
+  opacity: 0.56;
+}
+
+.date-chip.is-past .date-chip-date {
+  font-weight: 400;
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+
+.date-chip.is-next {
+  border-color: var(--ink-primary);
+  background-color: var(--bg-elevated);
+}
+
+.date-chip.is-next .date-chip-date {
+  font-weight: 600;
+}
+
+.date-chip.is-next .date-chip-note {
+  color: var(--ink-primary);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.date-chip.is-next .date-chip-note::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--ink-primary);
+  flex-shrink: 0;
 }
 
 .calendar-source-note {
@@ -951,6 +1004,12 @@ a:hover {
 /* ==========================================================================
    RESPONSIVE BREAKPOINTS
    ========================================================================== */
+@media (min-width: 560px) {
+  .dates-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (min-width: 640px) {
   .pillars-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -980,6 +1039,11 @@ a:hover {
 
   .nav-toggle {
     display: none;
+  }
+
+  .dates-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.65rem;
   }
 }
 

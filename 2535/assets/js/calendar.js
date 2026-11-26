@@ -37,6 +37,41 @@
     return `${start.getDate()} ${MONTHS_GENITIVE[start.getMonth()]}`;
   }
 
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function splitLabelAndNote(ev) {
+    if (ev.label) {
+      const match = ev.label.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+      if (match) {
+        return { dateText: match[1].trim(), note: match[2].trim() };
+      }
+    }
+
+    const dateText = formatPolishDate(ev);
+    const title = (ev.title || '').trim();
+    const isDefaultTitle = !title || /^(spotkanie\s+)?projekt\s*25[-–]35$/i.test(title);
+    if (!isDefaultTitle) {
+      return { dateText, note: title };
+    }
+
+    const start = parseDateSafe(ev.start);
+    const end = ev.end ? parseDateSafe(ev.end) : null;
+    if (start && end && end.toDateString() !== start.toDateString() && ev.allDay) {
+      const adjEnd = new Date(end.getTime() - 86400000);
+      if (adjEnd.toDateString() !== start.toDateString()) {
+        return { dateText, note: `${DAYS_PL[start.getDay()]}–${DAYS_PL[adjEnd.getDay()]}` };
+      }
+    }
+    return { dateText, note: start ? DAYS_PL[start.getDay()] : '' };
+  }
+
   function formatMeta(ev) {
     const start = parseDateSafe(ev.start);
     const parts = [];
@@ -114,14 +149,15 @@
     const nextEv = upcoming[0] || null;
 
     if (nextEv) {
-      const label = formatPolishDate(nextEv);
+      const { dateText } = splitLabelAndNote(nextEv);
       const meta = formatMeta(nextEv);
       const subUrl = window.PROJEKT_CONFIG?.calendar?.googleSubscribeUrl || '#';
+      const titleText = escapeHtml(nextEv.title || 'Spotkanie Projekt 25-35');
 
       cardEl.innerHTML = `
         <span class="next-meeting-badge">Najbliższe spotkanie</span>
-        <h3 class="next-meeting-date">${label}</h3>
-        <p class="next-meeting-meta">${nextEv.title || 'Spotkanie Projekt 25-35'}${meta ? ' · ' + meta : ''}</p>
+        <h3 class="next-meeting-date">${escapeHtml(dateText)}</h3>
+        <p class="next-meeting-meta">${titleText}${meta ? ' · ' + escapeHtml(meta) : ''}</p>
         <div class="next-meeting-actions">
           <button type="button" class="btn btn--primary btn--sm" id="btn-download-ics">Dodaj do kalendarza (.ics)</button>
           <a class="btn btn--sm" href="${subUrl}" target="_blank" rel="noopener noreferrer">Subskrybuj kalendarz Google ↗</a>
@@ -134,20 +170,21 @@
       cardEl.innerHTML = `
         <span class="next-meeting-badge">Kalendarz spotkań</span>
         <h3 class="next-meeting-date">Nowe terminy wkrótce</h3>
-        <p class="next-meeting-meta">Śledź sekcję aktualności powyżej lub dołącz do grupy WhatsApp, aby nie przegapić kolejnego spotkania.</p>
+        <p class="next-meeting-meta">Śledź sekcję <a href="#aktualnosci">aktualności</a> poniżej lub dołącz do <a href="#dolacz">grupy WhatsApp</a>, aby nie przegapić kolejnego spotkania.</p>
       `;
     }
 
-    // Lista terminów zgodna z Brand Bookiem (separator |)
+    // Siatka terminów sezonu
     ribbonEl.innerHTML = normalized
-      .map((ev, idx) => {
+      .map((ev) => {
         const isPast = ev._endDate < today;
         const isNext = nextEv && ev === nextEv;
-        const cls = ['date-item', isPast ? 'is-past' : '', isNext ? 'is-next' : ''].filter(Boolean).join(' ');
-        const sep = idx < normalized.length - 1 ? '<span class="date-sep" aria-hidden="true">|</span>' : '';
-        return `<span class="${cls}">${formatPolishDate(ev)}</span>${sep}`;
+        const cls = ['date-chip', isPast ? 'is-past' : '', isNext ? 'is-next' : ''].filter(Boolean).join(' ');
+        const { dateText, note } = splitLabelAndNote(ev);
+        const subText = isNext ? 'najbliższe' : isPast ? 'za nami' : note;
+        return `<li class="${cls}"><span class="date-chip-date">${escapeHtml(dateText)}</span><span class="date-chip-note">${escapeHtml(subText)}</span></li>`;
       })
-      .join(' ');
+      .join('');
 
     if (noteEl) {
       noteEl.textContent = isLive

@@ -181,11 +181,22 @@
           <!-- Wypełniane dynamicznie przez assets/js/calendar.js -->
         </div>
 
-        <p id="dates-ribbon" class="dates-ribbon" data-reveal>
-          <!-- Fallback bez JS -->
-          5 września | 17 października | 7 listopada | 5 grudnia | 16 stycznia | 5–7 lutego (rekolekcje wyjazdowe) | 6
-          marca | 10 kwietnia | 22 maja | 19 czerwca
-        </p>
+        <div class="dates-schedule" data-reveal>
+          <p class="dates-schedule-label">Harmonogram sezonu</p>
+          <ul id="dates-ribbon" class="dates-grid">
+            <!-- Fallback bez JS -->
+            <li class="date-chip"><span class="date-chip-date">5 września</span><span class="date-chip-note">sobota</span></li>
+            <li class="date-chip"><span class="date-chip-date">17 października</span><span class="date-chip-note">sobota</span></li>
+            <li class="date-chip"><span class="date-chip-date">7 listopada</span><span class="date-chip-note">sobota</span></li>
+            <li class="date-chip"><span class="date-chip-date">5 grudnia</span><span class="date-chip-note">sobota</span></li>
+            <li class="date-chip"><span class="date-chip-date">16 stycznia</span><span class="date-chip-note">sobota</span></li>
+            <li class="date-chip"><span class="date-chip-date">5–7 lutego</span><span class="date-chip-note">rekolekcje wyjazdowe</span></li>
+            <li class="date-chip"><span class="date-chip-date">6 marca</span><span class="date-chip-note">sobota</span></li>
+            <li class="date-chip"><span class="date-chip-date">10 kwietnia</span><span class="date-chip-note">sobota</span></li>
+            <li class="date-chip"><span class="date-chip-date">22 maja</span><span class="date-chip-note">sobota</span></li>
+            <li class="date-chip"><span class="date-chip-date">19 czerwca</span><span class="date-chip-note">sobota</span></li>
+          </ul>
+        </div>
 
         <p id="calendar-source-note" class="calendar-source-note" data-reveal></p>
       </div>
